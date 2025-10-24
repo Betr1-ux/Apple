@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🍎 Apple Game</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+
+    /* 🎨 الخلفية المتحركة */
+    background: linear-gradient(270deg, #ff0000, #b30000, #ff3333, #990000);
+    background-size: 800% 800%;
+    animation: bgMove 10s ease infinite;
+  }
+
+  @keyframes bgMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .card {
+    text-align: center;
+    background: rgba(50, 0, 0, 0.7);
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 0 25px rgba(255,0,0,0.6);
+    width: min(95vw, 420px);
+    position: relative;
+    backdrop-filter: blur(6px);
+  }
+  h1 { color: #ffcccc; font-size: 28px; margin-bottom: 15px; }
+  .input {
+    width: 100%; height: 44px; border: none; border-radius: 10px;
+    margin: 6px 0; padding: 0 10px; text-align: center; font-size: 16px;
+  }
+  .error { display: none; color: #ff4b4b; font-weight: 700; margin: 6px 0; }
+  button {
+    padding: 12px 24px; border: none; border-radius: 10px;
+    background: #ff3333; color: #fff; font-size: 16px;
+    cursor: pointer; font-weight: bold;
+    box-shadow: 0 0 10px rgba(255, 80, 80, 0.6);
+  }
+  button:hover { opacity: .9; transform: scale(1.05); transition: 0.3s; }
+  .badge {
+    background: rgba(255,0,0,0.4); padding: 8px 14px; border-radius: 10px;
+    margin: 10px auto; display: inline-block;
+  }
+  .row { display: flex; align-items: center; justify-content: center; margin: 10px 0; gap: 10px; }
+  .mult { background: #ff3333; padding: 8px; border-radius: 8px; font-weight: bold; min-width: 70px; }
+  .slots { display: flex; gap: 10px; }
+  .slot {
+    width: 46px; height: 46px; background: #fff; border-radius: 8px;
+    font-size: 26px; display: flex; align-items: center; justify-content: center; color: #000;
+  }
+  .loader {
+    border: 6px solid #fff; border-top: 6px solid #ff3333;
+    border-radius: 50%; width: 60px; height: 60px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto; display: none;
+  }
+  @keyframes spin { 0%{transform:rotate(0)}100%{transform:rotate(360deg)} }
+
+  .telegram-btn {
+    position: absolute;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0088cc;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(0,136,204,0.6);
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .telegram-btn:hover { background: #00aaff; }
+  .telegram-btn img { width: 28px; height: 28px; }
+</style>
+</head>
+<body>
+
+<!-- تسجيل الدخول -->
+<div id="loginBox" class="card">
+  <h1>تسجيل الدخول</h1>
+  <input id="userId" class="input" type="text" placeholder="ID" />
+  <input id="code" class="input" type="text" placeholder="Code" autocomplete="one-time-code" />
+  <div id="errorMsg" class="error">كود خطأ أو انتهى</div>
+  <button onclick="login()">تأكيد</button>
+
+  <a href="https://t.me/Loty122" target="_blank" class="telegram-btn">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram"/>
+  </a>
+</div>
+
+<!-- واجهة اللعبة -->
+<div id="gameBox" class="card" style="display:none;">
+  <h1>🍎 Apple Game</h1>
+  <div class="badge">المحاولات: <b id="attempts">0</b></div>
+
+  <div class="row">
+    <div class="mult">X4.02</div>
+    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+  </div>
+  <div class="row">
+    <div class="mult">X2.41</div>
+    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+  </div>
+  <div class="row">
+    <div class="mult">X1.93</div>
+    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+  </div>
+  <div class="row">
+    <div class="mult">X1.54</div>
+    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+  </div>
+  <div class="row">
+    <div class="mult">X1.23</div>
+    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+  </div>
+
+  <div class="loader" id="loader"></div>
+
+  <div style="margin-top:20px;display:flex;gap:15px;justify-content:center;">
+    <button onclick="startShowApples()">Show Apple</button>
+    <button onclick="resetGame()">Reset Game</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD08Eud45qyQH8vV6lRQYyDhpvBY5ZXRbE",
+    authDomain: "king-admin-1a7ca.firebaseapp.com",
+    databaseURL: "https://king-admin-1a7ca-default-rtdb.firebaseio.com",
+    projectId: "king-admin-1a7ca",
+    storageBucket: "king-admin-1a7ca.firebasestorage.app",
+    messagingSenderId: "942166600491",
+    appId: "1:942166600491:web:1962bba7655ddd0926b36e",
+    measurementId: "G-6BY7G3RZBC"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let attempts = 0;
+  let currentCode = "";
+
+  window.login = async () => {
+    const userId = document.getElementById("userId").value.trim();
+    const codeInput = document.getElementById("code").value.trim();
+    const errorMsg = document.getElementById("errorMsg");
+
+    if (!userId || !codeInput) {
+      errorMsg.style.display = "block";
+      errorMsg.textContent = "ادخل ID والكود";
+      return;
+    }
+
+    try {
+      const snap = await get(ref(db, "codes/" + codeInput));
+      if (!snap.exists()) throw new Error("invalid");
+
+      const data = snap.val();
+      if ((data.remaining ?? 0) <= 0) throw new Error("exhausted");
+
+      currentCode = codeInput;
+      attempts = data.remaining;
+      await update(ref(db, "codes/" + codeInput), { user: userId });
+
+      errorMsg.style.display = "none";
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("gameBox").style.display = "block";
+      updateAttemptsUI();
+    } catch(e){
+      errorMsg.style.display = "block";
+      errorMsg.textContent = "كود خطأ أو انتهى";
+    }
+  };
+
+  function updateAttemptsUI(){
+    document.getElementById("attempts").textContent = attempts;
+  }
+
+  function logoutAuto(){
+    document.getElementById("gameBox").style.display = "none";
+    document.getElementById("loginBox").style.display = "block";
+    document.querySelectorAll('.slot').forEach(s => s.textContent = "");
+    document.getElementById("loader").style.display = "none";
+    currentCode = "";
+  }
+
+  window.startShowApples = async () => {
+    if (attempts <= 0) {
+      logoutAuto();
+      return;
+    }
+    attempts--;
+    updateAttemptsUI();
+    await update(ref(db, "codes/" + currentCode), { remaining: attempts });
+
+    document.getElementById("loader").style.display = "block";
+    document.querySelectorAll('.slot').forEach(s => s.textContent = "");
+
+    setTimeout(() => {
+      document.getElementById("loader").style.display = "none";
+      showApples();
+
+      if (attempts <= 0) {
+        setTimeout(()=> logoutAuto(), 1000);
+      }
+    }, 2000);
+  };
+
+  function showApples() {
+    document.querySelectorAll('.row').forEach(row => {
+      let slots = row.querySelectorAll('.slot');
+      let randomIndex = Math.floor(Math.random() * slots.length);
+      slots[randomIndex].textContent = "🍎";
+    });
+  }
+
+  window.resetGame = () => {
+    document.querySelectorAll('.slot').forEach(s => s.textContent = "");
+    document.getElementById("loader").style.display = "none";
+  };
+</script>
+</body>
+  </html>
