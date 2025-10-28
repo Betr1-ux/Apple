@@ -7,66 +7,155 @@
 <style>
   body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Cairo', sans-serif;
+    background: radial-gradient(circle at center, #4b2a15 0%, #2a180c 100%);
     color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-
-    /* 🎨 الخلفية المتحركة */
-    background: linear-gradient(270deg, #ff0000, #b30000, #ff3333, #990000);
-    background-size: 800% 800%;
-    animation: bgMove 10s ease infinite;
+    overflow: hidden;
   }
 
-  @keyframes bgMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  /* تأثير خطوط الهكر الخضراء */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 102, 0.06) 0px,
+      rgba(0, 255, 102, 0.06) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+    animation: hackerScroll 12s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes hackerScroll {
+    from { background-position-y: 0; }
+    to { background-position-y: 100%; }
   }
 
   .card {
     text-align: center;
-    background: rgba(50, 0, 0, 0.7);
+    background: rgba(60, 40, 20, 0.95);
     padding: 25px;
     border-radius: 14px;
-    box-shadow: 0 0 25px rgba(255,0,0,0.6);
+    box-shadow: 0 0 25px rgba(0,255,128,0.3);
     width: min(95vw, 420px);
     position: relative;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
   }
-  h1 { color: #ffcccc; font-size: 28px; margin-bottom: 15px; }
+
+  h1 {
+    color: #00ff99;
+    font-size: 28px;
+    margin-bottom: 15px;
+    text-shadow: 0 0 12px #00ff99;
+  }
+
   .input {
-    width: 100%; height: 44px; border: none; border-radius: 10px;
-    margin: 6px 0; padding: 0 10px; text-align: center; font-size: 16px;
+    width: 100%;
+    height: 44px;
+    border: none;
+    border-radius: 10px;
+    margin: 6px 0;
+    padding: 0 10px;
+    text-align: center;
+    font-size: 16px;
+    background: #3a2410;
+    color: #fff;
   }
-  .error { display: none; color: #ff4b4b; font-weight: 700; margin: 6px 0; }
+
+  .input:focus {
+    outline: 2px solid #00ff99;
+    box-shadow: 0 0 10px #00ff99;
+  }
+
+  .error {
+    display: none;
+    color: #ff5555;
+    font-weight: 700;
+    margin: 6px 0;
+  }
+
   button {
-    padding: 12px 24px; border: none; border-radius: 10px;
-    background: #ff3333; color: #fff; font-size: 16px;
-    cursor: pointer; font-weight: bold;
-    box-shadow: 0 0 10px rgba(255, 80, 80, 0.6);
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #00ff99, #44ffaa);
+    color: #05200d;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(0,255,128,0.6);
+    transition: 0.3s;
   }
-  button:hover { opacity: .9; transform: scale(1.05); transition: 0.3s; }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0,255,128,0.8);
+  }
+
   .badge {
-    background: rgba(255,0,0,0.4); padding: 8px 14px; border-radius: 10px;
-    margin: 10px auto; display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 14px;
+    border-radius: 10px;
+    margin: 10px auto;
+    display: inline-block;
+    box-shadow: inset 0 0 8px rgba(0,255,128,0.4);
   }
-  .row { display: flex; align-items: center; justify-content: center; margin: 10px 0; gap: 10px; }
-  .mult { background: #ff3333; padding: 8px; border-radius: 8px; font-weight: bold; min-width: 70px; }
-  .slots { display: flex; gap: 10px; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0;
+    gap: 10px;
+  }
+
+  .mult {
+    background: #00ff99;
+    color: #05200d;
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: bold;
+    min-width: 70px;
+  }
+
+  .slots {
+    display: flex;
+    gap: 10px;
+  }
+
   .slot {
-    width: 46px; height: 46px; background: #fff; border-radius: 8px;
-    font-size: 26px; display: flex; align-items: center; justify-content: center; color: #000;
+    width: 46px;
+    height: 46px;
+    background: #fff;
+    border-radius: 8px;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
   }
+
   .loader {
-    border: 6px solid #fff; border-top: 6px solid #ff3333;
-    border-radius: 50%; width: 60px; height: 60px;
+    border: 6px solid #fff;
+    border-top: 6px solid #00ff99;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
     animation: spin 1s linear infinite;
-    margin: 20px auto; display: none;
+    margin: 20px auto;
+    display: none;
   }
-  @keyframes spin { 0%{transform:rotate(0)}100%{transform:rotate(360deg)} }
+
+  @keyframes spin {
+    0% { transform: rotate(0); }
+    100% { transform: rotate(360deg); }
+  }
 
   .telegram-btn {
     position: absolute;
@@ -84,8 +173,15 @@
     cursor: pointer;
     transition: 0.3s;
   }
-  .telegram-btn:hover { background: #00aaff; }
-  .telegram-btn img { width: 28px; height: 28px; }
+
+  .telegram-btn:hover {
+    background: #00aaff;
+  }
+
+  .telegram-btn img {
+    width: 28px;
+    height: 28px;
+  }
 </style>
 </head>
 <body>
@@ -238,4 +334,4 @@
   };
 </script>
 </body>
-  </html>
+                                                                                                                         </html>
