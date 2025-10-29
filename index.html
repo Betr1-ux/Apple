@@ -17,7 +17,6 @@
     overflow: hidden;
   }
 
-  /* تأثير خطوط الهكر الخضراء */
   body::before {
     content: "";
     position: fixed;
@@ -174,13 +173,18 @@
     transition: 0.3s;
   }
 
-  .telegram-btn:hover {
-    background: #00aaff;
-  }
-
   .telegram-btn img {
     width: 28px;
     height: 28px;
+  }
+
+  .inactive-overlay {
+    margin-top: 15px;
+    background: rgba(255, 50, 50, 0.1);
+    color: #ff5555;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ff5555;
   }
 </style>
 </head>
@@ -203,39 +207,44 @@
 <div id="gameBox" class="card" style="display:none;">
   <h1>🍎 Apple Game</h1>
   <div class="badge">المحاولات: <b id="attempts">0</b></div>
-
-  <div class="row">
-    <div class="mult">X4.02</div>
-    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
-  </div>
-  <div class="row">
-    <div class="mult">X2.41</div>
-    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
-  </div>
-  <div class="row">
-    <div class="mult">X1.93</div>
-    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
-  </div>
-  <div class="row">
-    <div class="mult">X1.54</div>
-    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
-  </div>
-  <div class="row">
-    <div class="mult">X1.23</div>
-    <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+  <div id="inactiveMsg" class="inactive-overlay" style="display:none;">
+    🔒 الحساب غير مفعل – برجاء للتواصل مع الأدمن @Loty122
   </div>
 
-  <div class="loader" id="loader"></div>
+  <div id="gameArea">
+    <div class="row">
+      <div class="mult">X4.02</div>
+      <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+    </div>
+    <div class="row">
+      <div class="mult">X2.41</div>
+      <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+    </div>
+    <div class="row">
+      <div class="mult">X1.93</div>
+      <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+    </div>
+    <div class="row">
+      <div class="mult">X1.54</div>
+      <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+    </div>
+    <div class="row">
+      <div class="mult">X1.23</div>
+      <div class="slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+    </div>
 
-  <div style="margin-top:20px;display:flex;gap:15px;justify-content:center;">
-    <button onclick="startShowApples()">Show Apple</button>
-    <button onclick="resetGame()">Reset Game</button>
+    <div class="loader" id="loader"></div>
+
+    <div style="margin-top:20px;display:flex;gap:15px;justify-content:center;">
+      <button id="showBtn" onclick="startShowApples()">Show Apple</button>
+      <button id="resetBtn" onclick="resetGame()">Reset Game</button>
+    </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+  import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD08Eud45qyQH8vV6lRQYyDhpvBY5ZXRbE",
@@ -253,9 +262,11 @@
 
   let attempts = 0;
   let currentCode = "";
+  let userId = "";
+  let isActive = false;
 
   window.login = async () => {
-    const userId = document.getElementById("userId").value.trim();
+    userId = document.getElementById("userId").value.trim();
     const codeInput = document.getElementById("code").value.trim();
     const errorMsg = document.getElementById("errorMsg");
 
@@ -268,7 +279,6 @@
     try {
       const snap = await get(ref(db, "codes/" + codeInput));
       if (!snap.exists()) throw new Error("invalid");
-
       const data = snap.val();
       if ((data.remaining ?? 0) <= 0) throw new Error("exhausted");
 
@@ -276,29 +286,46 @@
       attempts = data.remaining;
       await update(ref(db, "codes/" + codeInput), { user: userId });
 
-      errorMsg.style.display = "none";
+      // ✅ الدخول للعبة ولكن مغلقة لحين التفعيل
       document.getElementById("loginBox").style.display = "none";
       document.getElementById("gameBox").style.display = "block";
       updateAttemptsUI();
-    } catch(e){
+
+      // متابعة حالة التفعيل من الأدمن مباشرة
+      onValue(ref(db, "users/" + userId + "/active"), (snap) => {
+        isActive = snap.exists() && snap.val() === true;
+        if (isActive) {
+          document.getElementById("inactiveMsg").style.display = "none";
+          document.getElementById("showBtn").disabled = false;
+          document.getElementById("resetBtn").disabled = false;
+          document.getElementById("gameArea").style.opacity = "1";
+        } else {
+          document.getElementById("inactiveMsg").style.display = "block";
+          document.getElementById("showBtn").disabled = true;
+          document.getElementById("resetBtn").disabled = true;
+          document.getElementById("gameArea").style.opacity = "0.3";
+        }
+      });
+    } catch (e) {
       errorMsg.style.display = "block";
       errorMsg.textContent = "كود خطأ أو انتهى";
     }
   };
 
-  function updateAttemptsUI(){
+  function updateAttemptsUI() {
     document.getElementById("attempts").textContent = attempts;
   }
 
-  function logoutAuto(){
+  function logoutAuto() {
     document.getElementById("gameBox").style.display = "none";
     document.getElementById("loginBox").style.display = "block";
-    document.querySelectorAll('.slot').forEach(s => s.textContent = "");
+    document.querySelectorAll(".slot").forEach(s => s.textContent = "");
     document.getElementById("loader").style.display = "none";
     currentCode = "";
   }
 
   window.startShowApples = async () => {
+    if (!isActive) return;
     if (attempts <= 0) {
       logoutAuto();
       return;
@@ -308,30 +335,31 @@
     await update(ref(db, "codes/" + currentCode), { remaining: attempts });
 
     document.getElementById("loader").style.display = "block";
-    document.querySelectorAll('.slot').forEach(s => s.textContent = "");
+    document.querySelectorAll(".slot").forEach(s => s.textContent = "");
 
     setTimeout(() => {
       document.getElementById("loader").style.display = "none";
       showApples();
 
       if (attempts <= 0) {
-        setTimeout(()=> logoutAuto(), 1000);
+        setTimeout(() => logoutAuto(), 1000);
       }
     }, 2000);
   };
 
   function showApples() {
-    document.querySelectorAll('.row').forEach(row => {
-      let slots = row.querySelectorAll('.slot');
+    document.querySelectorAll(".row").forEach(row => {
+      let slots = row.querySelectorAll(".slot");
       let randomIndex = Math.floor(Math.random() * slots.length);
       slots[randomIndex].textContent = "🍎";
     });
   }
 
   window.resetGame = () => {
-    document.querySelectorAll('.slot').forEach(s => s.textContent = "");
+    if (!isActive) return;
+    document.querySelectorAll(".slot").forEach(s => s.textContent = "");
     document.getElementById("loader").style.display = "none";
   };
 </script>
 </body>
-                                                                                                                         </html>
+</html>
